@@ -46,3 +46,4 @@ coverage/
 .coverage
 htmlcov/
 .nyc_output/
+my-notes.txt

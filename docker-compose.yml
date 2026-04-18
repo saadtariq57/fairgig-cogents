@@ -71,9 +71,10 @@ services:
     environment:
       FRONTEND_ORIGIN: http://localhost:3000
       EARNINGS_SERVICE_URL: http://earnings:8002
+      AUTH_SERVICE_URL: http://auth:8001
     ports:
       - "8006:8006"
-    depends_on: [earnings]
+    depends_on: [earnings, auth]
     restart: unless-stopped
     networks: [fairgig]
 

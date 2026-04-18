@@ -1,9 +1,10 @@
 "use client";
 
+import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,14 +12,39 @@ import { Logo } from "@/components/logo";
 import { FadeIn } from "@/components/motion";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { toast } from "sonner";
+import { useAuth } from "@/lib/auth-context";
+import { ApiError } from "@/lib/api";
 
 export default function LoginPage() {
   const router = useRouter();
-  function onSubmit(e: React.FormEvent) {
+  const { login, status } = useAuth();
+  const [email, setEmail] = React.useState("");
+  const [password, setPassword] = React.useState("");
+  const [submitting, setSubmitting] = React.useState(false);
+
+  React.useEffect(() => {
+    if (status === "authenticated") router.replace("/app");
+  }, [status, router]);
+
+  async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    toast.success("Signed in. Welcome back.");
-    router.push("/app");
+    if (submitting) return;
+    setSubmitting(true);
+    try {
+      const me = await login(email.trim(), password);
+      toast.success(`Signed in. Welcome back${me.name ? `, ${me.name}` : ""}.`);
+      router.push("/app");
+    } catch (err) {
+      const message =
+        err instanceof ApiError
+          ? err.message
+          : "Could not sign in. Please try again.";
+      toast.error(message);
+    } finally {
+      setSubmitting(false);
+    }
   }
+
   return (
     <div className="relative min-h-screen grid lg:grid-cols-2 bg-background">
       <div className="absolute right-4 top-4 z-20">
@@ -68,8 +94,16 @@ export default function LoginPage() {
 
             <form onSubmit={onSubmit} className="mt-8 space-y-4">
               <div className="space-y-1.5">
-                <Label htmlFor="email">Email or phone</Label>
-                <Input id="email" placeholder="you@fairgig.app" required />
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  autoComplete="email"
+                  placeholder="you@fairgig.app"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="password" className="flex justify-between">
@@ -81,11 +115,32 @@ export default function LoginPage() {
                     Forgot?
                   </Link>
                 </Label>
-                <Input id="password" type="password" required />
+                <Input
+                  id="password"
+                  type="password"
+                  autoComplete="current-password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
               </div>
-              <Button type="submit" className="w-full mt-2" size="lg">
-                Sign in
-                <ArrowRight />
+              <Button
+                type="submit"
+                className="w-full mt-2"
+                size="lg"
+                disabled={submitting}
+              >
+                {submitting ? (
+                  <>
+                    <Loader2 className="animate-spin" />
+                    Signing in…
+                  </>
+                ) : (
+                  <>
+                    Sign in
+                    <ArrowRight />
+                  </>
+                )}
               </Button>
             </form>
 

@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import {
   LayoutDashboard,
@@ -16,10 +16,10 @@ import {
   Search,
   LogOut,
   ChevronDown,
+  Loader2,
 } from "lucide-react";
 import { Logo } from "@/components/logo";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -32,6 +32,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import type { Role } from "@/lib/mock-data";
+import { useAuth } from "@/lib/auth-context";
 
 type NavItem = {
   href: string;
@@ -61,10 +62,40 @@ export function useRole() {
 }
 
 export function AppShell({ children }: { children: React.ReactNode }) {
-  const [role, setRole] = React.useState<Role>("worker");
+  const router = useRouter();
   const pathname = usePathname();
+  const { status, user, logout } = useAuth();
+
+  const [role, setRole] = React.useState<Role>("worker");
+
+  React.useEffect(() => {
+    if (status === "unauthenticated") router.replace("/login");
+  }, [status, router]);
+
+  // Sync the shell's active persona with the signed-in user's role.
+  React.useEffect(() => {
+    if (user?.role) setRole(user.role as Role);
+  }, [user?.role]);
+
+  if (status !== "authenticated" || !user) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <Loader2 className="size-4 animate-spin" />
+          Loading your workspace…
+        </div>
+      </div>
+    );
+  }
 
   const visibleNav = NAV.filter((n) => n.roles.includes(role));
+  const displayName = user.name?.trim() || user.email;
+  const initials = getInitials(displayName);
+
+  function handleSignOut() {
+    logout();
+    router.replace("/login");
+  }
 
   return (
     <RoleContext.Provider value={{ role, setRole }}>
@@ -122,12 +153,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <div className="mt-1.5 flex items-center gap-2">
                 <Avatar className="size-7">
                   <AvatarFallback className="text-[10px] bg-foreground text-background">
-                    AR
+                    {initials}
                   </AvatarFallback>
                 </Avatar>
                 <div className="min-w-0">
                   <p className="text-sm font-medium leading-tight truncate">
-                    Asif Rehman
+                    {displayName}
                   </p>
                   <p className="text-xs text-muted-foreground capitalize">{role}</p>
                 </div>
@@ -166,18 +197,21 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                     >
                       <Avatar className="size-7">
                         <AvatarFallback className="text-[10px] bg-foreground text-background">
-                          AR
+                          {initials}
                         </AvatarFallback>
                       </Avatar>
                       <ChevronDown className="size-3.5 text-muted-foreground" />
                     </button>
                   }
                 />
-                <DropdownMenuContent align="end" className="w-48">
-                  <DropdownMenuLabel>My account</DropdownMenuLabel>
-                  <DropdownMenuItem
-                    render={<Link href="/" />}
-                  >
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuLabel className="flex flex-col gap-0.5">
+                    <span className="truncate">{displayName}</span>
+                    <span className="text-xs font-normal text-muted-foreground truncate">
+                      {user.email}
+                    </span>
+                  </DropdownMenuLabel>
+                  <DropdownMenuItem onClick={handleSignOut}>
                     <LogOut className="mr-2 size-4" /> Sign out
                   </DropdownMenuItem>
                 </DropdownMenuContent>
@@ -233,4 +267,15 @@ function RoleSwitcher({
       </DropdownMenuContent>
     </DropdownMenu>
   );
+}
+
+function getInitials(source: string): string {
+  const cleaned = source.trim();
+  if (!cleaned) return "?";
+  const parts = cleaned.split(/\s+/).filter(Boolean);
+  if (parts.length >= 2) {
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  }
+  const token = parts[0];
+  return (token.length >= 2 ? token.slice(0, 2) : token[0]).toUpperCase();
 }
