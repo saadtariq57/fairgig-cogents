@@ -25,6 +25,7 @@ enum GrievanceStatus {
 model Grievance {
   id          String            @id @default(uuid()) @db.Uuid
   workerId    String            @map("worker_id") @db.Uuid
+  authorName  String?           @map("author_name")
   anonymous   Boolean           @default(true)
   platform    String
   category    GrievanceCategory

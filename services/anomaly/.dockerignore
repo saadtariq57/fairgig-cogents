@@ -10,3 +10,5 @@ venv
 README.md
 Dockerfile
 .dockerignore
+samples
+scripts

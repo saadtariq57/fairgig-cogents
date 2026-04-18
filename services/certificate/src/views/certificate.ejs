@@ -1,0 +1,126 @@
+<%
+  // small helpers
+  function money(n) {
+    const x = Number(n || 0);
+    return 'PKR ' + x.toLocaleString('en-PK', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+  function dash(v) { return (v == null || v === '') ? '—' : v; }
+  var hasShifts = c.totals.shifts > 0;
+%><!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Income Certificate — <%= c.worker.name %></title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <%- include('partials/styles') %>
+</head>
+<body>
+  <main class="page">
+    <header class="masthead">
+      <div>
+        <h1>Income Certificate</h1>
+        <div class="sub">Verified gig-work earnings summary</div>
+      </div>
+      <div class="brand">
+        <strong>FairGig</strong><br />
+        Issued <%= new Date(c.generated_at).toUTCString() %>
+      </div>
+    </header>
+
+    <section class="worker-block">
+      <div class="field">
+        <label>Worker</label>
+        <div class="value"><%= c.worker.name %></div>
+      </div>
+      <div class="field">
+        <label>Worker ID</label>
+        <div class="value" style="font-family:Menlo,monospace;font-size:12px;"><%= c.worker.id %></div>
+      </div>
+      <div class="field">
+        <label>Category</label>
+        <div class="value"><%= dash(c.worker.category) %></div>
+      </div>
+      <div class="field">
+        <label>City Zone</label>
+        <div class="value"><%= dash(c.worker.city_zone) %></div>
+      </div>
+      <div class="field">
+        <label>Period</label>
+        <div class="value"><%= c.range.from %> &rarr; <%= c.range.to %></div>
+      </div>
+      <div class="field">
+        <label>Verified Shifts</label>
+        <div class="value"><%= c.totals.shifts %></div>
+      </div>
+    </section>
+
+    <section class="totals">
+      <div class="card">
+        <div class="label">Gross Earned</div>
+        <div class="amount"><%= money(c.totals.gross) %></div>
+      </div>
+      <div class="card">
+        <div class="label">Platform Deductions</div>
+        <div class="amount"><%= money(c.totals.deductions) %></div>
+      </div>
+      <div class="card">
+        <div class="label">Net Received</div>
+        <div class="amount"><%= money(c.totals.net) %></div>
+      </div>
+    </section>
+
+    <h2 class="section">Platform Breakdown</h2>
+
+    <% if (!hasShifts) { %>
+      <div class="empty-note">
+        No verified shifts found in this range.
+      </div>
+    <% } else { %>
+      <table class="breakdown">
+        <thead>
+          <tr>
+            <th>Platform</th>
+            <th>Shifts</th>
+            <th>Gross</th>
+            <th>Deductions</th>
+            <th>Net</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% c.platforms.forEach(function(p) { %>
+            <tr>
+              <td><%= p.platform %></td>
+              <td><%= p.shifts %></td>
+              <td><%= money(p.gross) %></td>
+              <td><%= money(p.deductions) %></td>
+              <td><%= money(p.net) %></td>
+            </tr>
+          <% }); %>
+          <tr class="totals-row">
+            <td>Total</td>
+            <td><%= c.totals.shifts %></td>
+            <td><%= money(c.totals.gross) %></td>
+            <td><%= money(c.totals.deductions) %></td>
+            <td><%= money(c.totals.net) %></td>
+          </tr>
+        </tbody>
+      </table>
+    <% } %>
+
+    <footer class="verification">
+      <div>
+        This certificate counts only shifts whose earnings were independently verified
+        (<code>verification_status = 'confirmed'</code>) in the FairGig system.
+        Totals above are computed from those shifts only.
+      </div>
+      <div style="margin-top:8px;">
+        Verification hash (SHA-256 of worker_id + from + to + totals):
+        <span class="hash" data-verification-hash="<%= c.hash %>"><%= c.hash %></span>
+      </div>
+      <div style="margin-top:4px;">
+        Generated at <%= c.generated_at %>
+      </div>
+    </footer>
+  </main>
+</body>
+</html>

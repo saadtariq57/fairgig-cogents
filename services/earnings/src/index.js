@@ -1,31 +1,21 @@
-import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
-import { PrismaClient } from '@prisma/client';
+import { config } from './config.js';
+import { prisma } from './prisma.js';
+import routes from './routes/index.js';
+import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
 
 const app = express();
-const prisma = new PrismaClient();
-const PORT = Number(process.env.PORT) || 8002;
 
-app.use(cors({ origin: process.env.FRONTEND_ORIGIN, credentials: true }));
+app.use(cors({ origin: config.frontendOrigin, credentials: true }));
 app.use(express.json());
 
-app.get('/health', async (_req, res) => {
-  try {
-    await prisma.$queryRaw`SELECT 1`;
-    res.json({ status: 'ok', service: 'earnings', db: 'reachable' });
-  } catch (err) {
-    res.status(503).json({
-      status: 'degraded',
-      service: 'earnings',
-      db: 'unreachable',
-      error: err.message,
-    });
-  }
-});
+app.use(routes);
+app.use(notFoundHandler);
+app.use(errorHandler);
 
-const server = app.listen(PORT, () => {
-  console.log(`[earnings] listening on :${PORT}`);
+const server = app.listen(config.port, () => {
+  console.log(`[earnings] listening on :${config.port}`);
 });
 
 const shutdown = async () => {

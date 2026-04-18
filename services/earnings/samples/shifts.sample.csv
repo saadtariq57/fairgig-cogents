@@ -1,0 +1,6 @@
+platform,date,hours_worked,gross_earned,platform_deductions,net_received,notes
+Careem,2026-04-01,6.5,2800,560,2240,morning block
+InDrive,2026-04-02,4,1500,225,1275,
+Foodpanda,2026-04-03,7,3100,620,2480,dinner rush
+Bykea,2026-04-04,5.5,2050,410,1640,
+Careem,2026-04-05,8,3600,720,2880,airport runs

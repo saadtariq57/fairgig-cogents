@@ -1,0 +1,28 @@
+{
+  "worker_id": "demo-worker-001",
+  "city_median_hourly_rate": 420.0,
+  "shifts": [
+    { "date": "2026-02-01", "platform": "Careem",    "hours_worked": 8,   "gross_earned": 3200, "platform_deductions": 576,  "net_received": 2624 },
+    { "date": "2026-02-03", "platform": "Careem",    "hours_worked": 7.5, "gross_earned": 3000, "platform_deductions": 540,  "net_received": 2460 },
+    { "date": "2026-02-05", "platform": "InDrive",   "hours_worked": 6,   "gross_earned": 2400, "platform_deductions": 432,  "net_received": 1968 },
+    { "date": "2026-02-08", "platform": "Careem",    "hours_worked": 8,   "gross_earned": 3100, "platform_deductions": 558,  "net_received": 2542 },
+    { "date": "2026-02-10", "platform": "Careem",    "hours_worked": 8,   "gross_earned": 3400, "platform_deductions": 612,  "net_received": 2788 },
+    { "date": "2026-02-12", "platform": "Foodpanda", "hours_worked": 5,   "gross_earned": 2000, "platform_deductions": 360,  "net_received": 1640 },
+    { "date": "2026-02-15", "platform": "Careem",    "hours_worked": 8,   "gross_earned": 3300, "platform_deductions": 594,  "net_received": 2706 },
+    { "date": "2026-02-18", "platform": "Careem",    "hours_worked": 9,   "gross_earned": 3600, "platform_deductions": 648,  "net_received": 2952 },
+    { "date": "2026-02-20", "platform": "InDrive",   "hours_worked": 7,   "gross_earned": 2700, "platform_deductions": 486,  "net_received": 2214 },
+    { "date": "2026-02-22", "platform": "Careem",    "hours_worked": 8,   "gross_earned": 3200, "platform_deductions": 576,  "net_received": 2624 },
+    { "date": "2026-02-25", "platform": "Careem",    "hours_worked": 7.5, "gross_earned": 2900, "platform_deductions": 522,  "net_received": 2378 },
+    { "date": "2026-02-27", "platform": "Foodpanda", "hours_worked": 6,   "gross_earned": 2400, "platform_deductions": 432,  "net_received": 1968 },
+
+    { "date": "2026-03-02", "platform": "Careem",    "hours_worked": 8,   "gross_earned": 3100, "platform_deductions": 558,  "net_received": 2542 },
+    { "date": "2026-03-05", "platform": "Careem",    "hours_worked": 6,   "gross_earned": 2200, "platform_deductions": 396,  "net_received": 1804 },
+    { "date": "2026-03-09", "platform": "InDrive",   "hours_worked": 5,   "gross_earned": 1800, "platform_deductions": 324,  "net_received": 1476 },
+    { "date": "2026-03-12", "platform": "Careem",    "hours_worked": 8,   "gross_earned": 3200, "platform_deductions": 1408, "net_received": 1792 },
+    { "date": "2026-03-15", "platform": "Careem",    "hours_worked": 7,   "gross_earned": 2500, "platform_deductions": 450,  "net_received": 2050 },
+    { "date": "2026-03-18", "platform": "Foodpanda", "hours_worked": 5,   "gross_earned": 1800, "platform_deductions": 324,  "net_received": 1476 },
+    { "date": "2026-03-22", "platform": "Careem",    "hours_worked": 6,   "gross_earned": 2100, "platform_deductions": 378,  "net_received": 1722 },
+    { "date": "2026-03-25", "platform": "InDrive",   "hours_worked": 5,   "gross_earned": 1700, "platform_deductions": 306,  "net_received": 1394 },
+    { "date": "2026-03-28", "platform": "Careem",    "hours_worked": 6,   "gross_earned": 2200, "platform_deductions": 396,  "net_received": 1804 }
+  ]
+}
