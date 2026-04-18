@@ -1,0 +1,108 @@
+name: fairgig-cogents
+
+services:
+  auth:
+    build: ./services/auth
+    container_name: fairgig-auth
+    env_file: ./services/auth/.env
+    environment:
+      FRONTEND_ORIGIN: http://localhost:3000
+    ports:
+      - "8001:8001"
+    restart: unless-stopped
+    networks: [fairgig]
+
+  earnings:
+    build: ./services/earnings
+    container_name: fairgig-earnings
+    env_file: ./services/earnings/.env
+    environment:
+      FRONTEND_ORIGIN: http://localhost:3000
+      AUTH_SERVICE_URL: http://auth:8001
+    volumes:
+      - earnings-uploads:/app/uploads
+    ports:
+      - "8002:8002"
+    depends_on: [auth]
+    restart: unless-stopped
+    networks: [fairgig]
+
+  anomaly:
+    build: ./services/anomaly
+    container_name: fairgig-anomaly
+    env_file: ./services/anomaly/.env
+    environment:
+      FRONTEND_ORIGIN: http://localhost:3000
+    ports:
+      - "8003:8003"
+    restart: unless-stopped
+    networks: [fairgig]
+
+  grievance:
+    build: ./services/grievance
+    container_name: fairgig-grievance
+    env_file: ./services/grievance/.env
+    environment:
+      FRONTEND_ORIGIN: http://localhost:3000
+      AUTH_SERVICE_URL: http://auth:8001
+    ports:
+      - "8004:8004"
+    depends_on: [auth]
+    restart: unless-stopped
+    networks: [fairgig]
+
+  analytics:
+    build: ./services/analytics
+    container_name: fairgig-analytics
+    env_file: ./services/analytics/.env
+    environment:
+      FRONTEND_ORIGIN: http://localhost:3000
+      GRIEVANCE_SERVICE_URL: http://grievance:8004
+    ports:
+      - "8005:8005"
+    depends_on: [grievance]
+    restart: unless-stopped
+    networks: [fairgig]
+
+  certificate:
+    build: ./services/certificate
+    container_name: fairgig-certificate
+    env_file: ./services/certificate/.env
+    environment:
+      FRONTEND_ORIGIN: http://localhost:3000
+      EARNINGS_SERVICE_URL: http://earnings:8002
+    ports:
+      - "8006:8006"
+    depends_on: [earnings]
+    restart: unless-stopped
+    networks: [fairgig]
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        NEXT_PUBLIC_AUTH_URL: http://localhost:8001
+        NEXT_PUBLIC_EARNINGS_URL: http://localhost:8002
+        NEXT_PUBLIC_ANOMALY_URL: http://localhost:8003
+        NEXT_PUBLIC_GRIEVANCE_URL: http://localhost:8004
+        NEXT_PUBLIC_ANALYTICS_URL: http://localhost:8005
+        NEXT_PUBLIC_CERTIFICATE_URL: http://localhost:8006
+    container_name: fairgig-frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - auth
+      - earnings
+      - anomaly
+      - grievance
+      - analytics
+      - certificate
+    restart: unless-stopped
+    networks: [fairgig]
+
+networks:
+  fairgig:
+    driver: bridge
+
+volumes:
+  earnings-uploads:

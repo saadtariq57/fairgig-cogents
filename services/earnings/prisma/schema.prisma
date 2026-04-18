@@ -1,0 +1,59 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum VerificationStatus {
+  unverified
+  pending_review
+  confirmed
+  flagged
+  unverifiable
+}
+
+model Shift {
+  id                 String             @id @default(uuid()) @db.Uuid
+  workerId           String             @map("worker_id") @db.Uuid
+  platform           String
+  shiftDate          DateTime           @map("shift_date") @db.Date
+  hoursWorked        Decimal            @map("hours_worked") @db.Decimal(5, 2)
+  grossEarned        Decimal            @map("gross_earned") @db.Decimal(12, 2)
+  platformDeductions Decimal            @map("platform_deductions") @db.Decimal(12, 2)
+  netReceived        Decimal            @map("net_received") @db.Decimal(12, 2)
+  notes              String?
+  verificationStatus VerificationStatus @default(unverified) @map("verification_status")
+  createdAt          DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt          DateTime           @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  verifications Verification[]
+
+  @@index([workerId, shiftDate])
+  @@index([platform, shiftDate])
+  @@index([verificationStatus])
+  @@map("shifts")
+}
+
+model Verification {
+  id             String             @id @default(uuid()) @db.Uuid
+  shiftId        String             @map("shift_id") @db.Uuid
+  workerId       String             @map("worker_id") @db.Uuid
+  verifierId     String?            @map("verifier_id") @db.Uuid
+  screenshotPath String             @map("screenshot_path")
+  status         VerificationStatus @default(pending_review)
+  reviewerNote   String?            @map("reviewer_note")
+  submittedAt    DateTime           @default(now()) @map("submitted_at") @db.Timestamptz(6)
+  reviewedAt     DateTime?          @map("reviewed_at") @db.Timestamptz(6)
+
+  shift Shift @relation(fields: [shiftId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+  @@index([shiftId])
+  @@index([verifierId])
+  @@index([workerId])
+  @@map("verifications")
+}

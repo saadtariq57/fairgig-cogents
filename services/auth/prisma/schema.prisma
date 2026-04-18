@@ -1,0 +1,55 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  worker
+  verifier
+  advocate
+}
+
+enum WorkerCategory {
+  ride_hailing
+  delivery
+  freelance
+  domestic
+}
+
+model User {
+  id           String          @id @default(uuid()) @db.Uuid
+  email        String          @unique
+  passwordHash String          @map("password_hash")
+  name         String?
+  role         Role
+  cityZone     String?         @map("city_zone")
+  category     WorkerCategory?
+  createdAt    DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
+  isActive     Boolean         @default(true) @map("is_active")
+
+  refreshTokens RefreshToken[]
+
+  @@index([role])
+  @@index([cityZone, category])
+  @@map("users")
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  tokenHash String   @map("token_hash")
+  expiresAt DateTime @map("expires_at") @db.Timestamptz(6)
+  revoked   Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("refresh_tokens")
+}

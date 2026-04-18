@@ -1,0 +1,58 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum GrievanceCategory {
+  commission_change
+  sudden_deactivation
+  unpaid_earnings
+  rate_drop
+  other
+}
+
+enum GrievanceStatus {
+  open
+  escalated
+  resolved
+}
+
+model Grievance {
+  id          String            @id @default(uuid()) @db.Uuid
+  workerId    String            @map("worker_id") @db.Uuid
+  anonymous   Boolean           @default(true)
+  platform    String
+  category    GrievanceCategory
+  description String
+  status      GrievanceStatus   @default(open)
+  tags        String[]          @default([])
+  clusterId   String?           @map("cluster_id")
+  postedAt    DateTime          @default(now()) @map("posted_at") @db.Timestamptz(6)
+  updatedAt   DateTime          @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  comments GrievanceComment[]
+
+  @@index([platform, category])
+  @@index([status])
+  @@index([postedAt])
+  @@index([clusterId])
+  @@map("grievances")
+}
+
+model GrievanceComment {
+  id          String   @id @default(uuid()) @db.Uuid
+  grievanceId String   @map("grievance_id") @db.Uuid
+  authorId    String   @map("author_id") @db.Uuid
+  body        String
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  grievance Grievance @relation(fields: [grievanceId], references: [id], onDelete: Cascade)
+
+  @@index([grievanceId])
+  @@map("grievance_comments")
+}
