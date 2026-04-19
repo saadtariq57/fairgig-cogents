@@ -12,14 +12,12 @@ import {
   Inbox,
   MessagesSquare,
   Megaphone,
-  Search,
   LogOut,
   ChevronDown,
   Loader2,
 } from "lucide-react";
 import { Logo } from "@/components/logo";
 import { cn } from "@/lib/utils";
-import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { ThemeToggle } from "@/components/theme-toggle";
 import {
@@ -154,16 +152,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-border bg-background/80 px-4 lg:px-6 backdrop-blur supports-backdrop-filter:bg-background/60">
           <div className="lg:hidden">
             <Logo size="sm" />
-          </div>
-
-          <div className="hidden md:flex items-center gap-2 flex-1 max-w-md">
-            <div className="relative w-full">
-              <Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                placeholder="Search shifts, grievances, workers…"
-                className="h-9 pl-8 bg-muted/50 border-border"
-              />
-            </div>
           </div>
 
           <div className="ml-auto flex items-center gap-2">
