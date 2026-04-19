@@ -304,11 +304,11 @@ export const earningsApi = {
       page: filters.page ?? 1,
       page_size: filters.page_size ?? 50,
     });
-    return apiFetch<ShiftListResponse>(EARNINGS_BASE_URL, `/shifts${qs}`);
+    return apiFetch<ShiftListResponse>(EARNINGS_BASE_URL, `/shifts/${qs}`);
   },
 
   createShift: (input: CreateShiftInput) =>
-    apiFetch<Shift>(EARNINGS_BASE_URL, "/shifts", {
+    apiFetch<Shift>(EARNINGS_BASE_URL, "/shifts/", {
       method: "POST",
       body: input,
     }),
@@ -361,13 +361,13 @@ export const verificationsApi = {
     const fd = new FormData();
     fd.append("file", file);
     fd.append("shift_id", shiftId);
-    return apiFetchMultipart<Verification>(EARNINGS_BASE_URL, "/verifications", fd);
+    return apiFetchMultipart<Verification>(EARNINGS_BASE_URL, "/verifications/", fd);
   },
 
   /** Verifier / Advocate: list verifications by status (default pending_review) */
   list: (status?: VerificationStatus) => {
     const qs = status ? `?status=${status}` : "";
-    return apiFetch<VerificationListResponse>(EARNINGS_BASE_URL, `/verifications${qs}`);
+    return apiFetch<VerificationListResponse>(EARNINGS_BASE_URL, `/verifications/${qs}`);
   },
 
   /** Verifier: approve / flag / mark unverifiable */
@@ -490,17 +490,17 @@ export const grievanceApi = {
     q.set("page", String(filters.page ?? 1));
     q.set("page_size", String(filters.page_size ?? 50));
     const qs = q.toString() ? `?${q}` : "";
-    return apiFetch<GrievanceListResponse>(GRIEVANCE_BASE_URL, `/grievances${qs}`);
+    return apiFetch<GrievanceListResponse>(GRIEVANCE_BASE_URL, `/grievances/${qs}`);
   },
 
   get: (id: string) =>
     apiFetch<Grievance & { comments: GrievanceComment[] }>(
       GRIEVANCE_BASE_URL,
-      `/grievances/${id}`
+      `/grievances/${id}/`
     ),
 
   create: (input: CreateGrievanceInput) =>
-    apiFetch<Grievance>(GRIEVANCE_BASE_URL, "/grievances", {
+    apiFetch<Grievance>(GRIEVANCE_BASE_URL, "/grievances/", {
       method: "POST",
       body: input,
     }),
@@ -528,7 +528,7 @@ export const grievanceApi = {
   getClusters: () =>
     apiFetch<{ clusters: GrievanceCluster[] }>(
       GRIEVANCE_BASE_URL,
-      "/grievances/clusters"
+      "/grievances/clusters/"
     ),
 };
 

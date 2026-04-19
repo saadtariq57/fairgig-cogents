@@ -88,11 +88,13 @@ export function validateListFilters(query) {
 
   if (q.from) {
     if (!DATE_RE.test(q.from)) throw badRequest('from must be YYYY-MM-DD');
-    filters.from = new Date(`${q.from}T00:00:00Z`);
+    filters.from = new Date(`${q.from}T00:00:00.000Z`);
+    if (isNaN(filters.from.getTime())) throw badRequest('from is not a valid date');
   }
   if (q.to) {
     if (!DATE_RE.test(q.to)) throw badRequest('to must be YYYY-MM-DD');
-    filters.to = new Date(`${q.to}T23:59:59Z`);
+    filters.to = new Date(`${q.to}T23:59:59.999Z`);
+    if (isNaN(filters.to.getTime())) throw badRequest('to is not a valid date');
   }
   if (q.platform) filters.platform = String(q.platform).trim();
   if (q.worker_id) filters.workerId = String(q.worker_id);
