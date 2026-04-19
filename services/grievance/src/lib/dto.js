@@ -25,6 +25,7 @@ export function grievanceToApi(g) {
     status: g.status,
     tags: g.tags || [],
     cluster_id: g.clusterId || null,
+    upvotes: g.upvotes ?? 0,
     posted_at: g.postedAt?.toISOString(),
     updated_at: g.updatedAt?.toISOString(),
   };

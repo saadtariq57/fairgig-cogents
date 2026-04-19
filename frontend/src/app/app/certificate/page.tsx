@@ -1,17 +1,27 @@
 "use client";
 
 import * as React from "react";
-import { Printer, Download, Share2, FileText } from "lucide-react";
+import { Printer, Download, FileText, RefreshCw } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { FadeIn } from "@/components/motion";
-import { mockShifts, currentUser } from "@/lib/mock-data";
+import { earningsApi, workerApi, type Shift, type WorkerProfile, ApiError } from "@/lib/api";
+import { useAuth } from "@/lib/auth-context";
+import { toast } from "sonner";
 
 export default function CertificatePage() {
+  const { user } = useAuth();
+
   const [from, setFrom] = React.useState(() => {
     const d = new Date();
     d.setDate(d.getDate() - 30);
@@ -20,23 +30,62 @@ export default function CertificatePage() {
   const [to, setTo] = React.useState(new Date().toISOString().slice(0, 10));
   const [verifiedOnly, setVerifiedOnly] = React.useState(true);
 
-  const inRange = mockShifts.filter((s) => {
-    const d = s.date;
-    if (d < from || d > to) return false;
-    if (verifiedOnly && s.verification !== "verified") return false;
-    return true;
-  });
+  const [shifts, setShifts] = React.useState<Shift[]>([]);
+  const [profile, setProfile] = React.useState<WorkerProfile | null>(null);
+  const [loading, setLoading] = React.useState(true);
 
-  const totals = inRange.reduce(
+  /* ---- Load shifts for the selected range ---- */
+  const load = React.useCallback(async () => {
+    setLoading(true);
+    try {
+      const [shiftsRes, profileRes] = await Promise.allSettled([
+        earningsApi.listShifts({
+          from,
+          to,
+          page_size: 200,
+        }),
+        user ? workerApi.getProfile(user.id) : Promise.reject(new Error("no user")),
+      ]);
+
+      if (shiftsRes.status === "fulfilled") {
+        const all = shiftsRes.value.items;
+        setShifts(
+          verifiedOnly
+            ? all.filter((s) => s.verification_status === "confirmed")
+            : all
+        );
+      } else {
+        throw shiftsRes.reason;
+      }
+
+      if (profileRes.status === "fulfilled") setProfile(profileRes.value);
+    } catch (err) {
+      const msg = err instanceof ApiError ? err.message : "Failed to load shifts.";
+      toast.error(msg);
+    } finally {
+      setLoading(false);
+    }
+  }, [from, to, verifiedOnly, user]);
+
+  React.useEffect(() => {
+    load();
+  }, [load]);
+
+  /* ---- Totals ---- */
+  const totals = shifts.reduce(
     (acc, s) => ({
-      gross: acc.gross + s.gross,
-      deductions: acc.deductions + s.deductions,
-      net: acc.net + s.net,
-      hours: acc.hours + s.hours,
+      gross: acc.gross + s.gross_earned,
+      deductions: acc.deductions + s.platform_deductions,
+      net: acc.net + s.net_received,
+      hours: acc.hours + s.hours_worked,
     }),
     { gross: 0, deductions: 0, net: 0, hours: 0 }
   );
   const hourly = totals.hours ? Math.round(totals.net / totals.hours) : 0;
+
+  const workerName = profile?.name ?? user?.name ?? "Worker";
+  const workerZone = profile?.city_zone ?? user?.city_zone ?? "—";
+  const workerId = user?.id?.slice(0, 8).toUpperCase() ?? "—";
 
   return (
     <div>
@@ -45,10 +94,7 @@ export default function CertificatePage() {
         description="A clean, printable income proof for landlords, banks, or family. Uses verified earnings only by default."
         actions={
           <>
-            <Button variant="outline">
-              <Share2 /> Copy link
-            </Button>
-            <Button variant="outline">
+            <Button variant="outline" onClick={() => window.print()}>
               <Download /> Save as PDF
             </Button>
             <Button onClick={() => window.print()}>
@@ -63,7 +109,9 @@ export default function CertificatePage() {
           <Card>
             <CardHeader>
               <CardTitle>Settings</CardTitle>
-              <CardDescription>Pick a date range and what to include.</CardDescription>
+              <CardDescription>
+                Pick a date range and what to include.
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-3">
@@ -86,6 +134,7 @@ export default function CertificatePage() {
                   />
                 </div>
               </div>
+
               <label className="flex items-start gap-3 rounded-lg border border-border p-3 cursor-pointer">
                 <input
                   type="checkbox"
@@ -103,14 +152,34 @@ export default function CertificatePage() {
                   </span>
                 </span>
               </label>
+
               <div className="rounded-lg bg-muted/40 p-3 text-xs text-muted-foreground space-y-1.5">
-                <p>This certificate includes:</p>
-                <ul className="list-disc pl-4 space-y-0.5">
-                  <li>{inRange.length} shifts</li>
-                  <li>Across {new Set(inRange.map((s) => s.platform)).size} platforms</li>
-                  <li>Total {totals.hours} hours worked</li>
-                </ul>
+                {loading ? (
+                  <p className="animate-pulse">Loading shifts…</p>
+                ) : (
+                  <>
+                    <p>This certificate includes:</p>
+                    <ul className="list-disc pl-4 space-y-0.5">
+                      <li>{shifts.length} shifts</li>
+                      <li>
+                        Across{" "}
+                        {new Set(shifts.map((s) => s.platform)).size} platforms
+                      </li>
+                      <li>Total {totals.hours.toFixed(1)} hours worked</li>
+                    </ul>
+                  </>
+                )}
               </div>
+
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={load}
+                disabled={loading}
+              >
+                <RefreshCw className={loading ? "animate-spin" : ""} />
+                Refresh
+              </Button>
             </CardContent>
           </Card>
         </FadeIn>
@@ -118,16 +187,17 @@ export default function CertificatePage() {
         <FadeIn delay={0.05}>
           <div className="print-page bg-white text-black rounded-xl ring-1 ring-foreground/10 overflow-hidden">
             <div className="p-8 lg:p-12">
+              {/* Header */}
               <div className="flex items-start justify-between gap-6 border-b border-black/15 pb-6">
                 <div>
                   <p className="text-xs uppercase tracking-widest text-black/60">
                     FairGig — Income certificate
                   </p>
                   <h2 className="font-heading text-3xl tracking-tight mt-2">
-                    {currentUser.name}
+                    {workerName}
                   </h2>
                   <p className="text-sm text-black/60 mt-1">
-                    Worker ID #FG-2841 · {currentUser.city}
+                    Worker ID #{workerId} · {workerZone}
                   </p>
                 </div>
                 <div className="text-right">
@@ -140,12 +210,13 @@ export default function CertificatePage() {
                 </div>
               </div>
 
+              {/* Summary stats */}
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
                 <CertStat label="Period" value={`${from} → ${to}`} />
-                <CertStat label="Shifts" value={inRange.length} />
+                <CertStat label="Shifts" value={shifts.length} />
                 <CertStat
                   label="Hours worked"
-                  value={`${totals.hours} h`}
+                  value={`${totals.hours.toFixed(1)} h`}
                 />
                 <CertStat
                   label="Effective hourly"
@@ -153,6 +224,7 @@ export default function CertificatePage() {
                 />
               </div>
 
+              {/* Gross / net banner */}
               <div className="mt-6 rounded-lg border border-black/15 overflow-hidden">
                 <div className="grid grid-cols-2 divide-x divide-black/15 bg-black/5">
                   <CertBigStat
@@ -167,36 +239,48 @@ export default function CertificatePage() {
                 </div>
               </div>
 
+              {/* Shift table */}
               <h3 className="font-heading text-base mt-8 mb-3">
-                Verified shifts in this period
+                {verifiedOnly ? "Verified" : "All"} shifts in this period
               </h3>
-              <table className="w-full text-sm">
-                <thead className="text-left text-xs text-black/60 border-b border-black/15">
-                  <tr>
-                    <th className="py-2 font-medium">Date</th>
-                    <th className="py-2 font-medium">Platform</th>
-                    <th className="py-2 font-medium">Hours</th>
-                    <th className="py-2 font-medium text-right">Gross</th>
-                    <th className="py-2 font-medium text-right">Net</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-black/10">
-                  {inRange.map((s) => (
-                    <tr key={s.id}>
-                      <td className="py-2 tabular-nums">{s.date}</td>
-                      <td className="py-2">{s.platform}</td>
-                      <td className="py-2">{s.hours}h</td>
-                      <td className="py-2 text-right tabular-nums">
-                        Rs. {s.gross.toLocaleString()}
-                      </td>
-                      <td className="py-2 text-right tabular-nums font-medium">
-                        Rs. {s.net.toLocaleString()}
-                      </td>
+              {loading ? (
+                <p className="text-sm text-black/50 animate-pulse">
+                  Loading…
+                </p>
+              ) : shifts.length === 0 ? (
+                <p className="text-sm text-black/50">
+                  No {verifiedOnly ? "verified " : ""}shifts in this range.
+                </p>
+              ) : (
+                <table className="w-full text-sm">
+                  <thead className="text-left text-xs text-black/60 border-b border-black/15">
+                    <tr>
+                      <th className="py-2 font-medium">Date</th>
+                      <th className="py-2 font-medium">Platform</th>
+                      <th className="py-2 font-medium">Hours</th>
+                      <th className="py-2 font-medium text-right">Gross</th>
+                      <th className="py-2 font-medium text-right">Net</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="divide-y divide-black/10">
+                    {shifts.map((s) => (
+                      <tr key={s.id}>
+                        <td className="py-2 tabular-nums">{s.date}</td>
+                        <td className="py-2">{s.platform}</td>
+                        <td className="py-2">{s.hours_worked}h</td>
+                        <td className="py-2 text-right tabular-nums">
+                          Rs. {s.gross_earned.toLocaleString()}
+                        </td>
+                        <td className="py-2 text-right tabular-nums font-medium">
+                          Rs. {s.net_received.toLocaleString()}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
 
+              {/* Footer */}
               <div className="mt-8 border-t border-black/15 pt-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                 <p className="text-xs text-black/60 max-w-md leading-relaxed">
                   This certificate is generated by FairGig from worker-logged
@@ -205,10 +289,10 @@ export default function CertificatePage() {
                 </p>
                 <div className="flex items-center gap-2">
                   <Badge className="bg-black text-white border-transparent">
-                    Verified
+                    {verifiedOnly ? "Verified" : "All shifts"}
                   </Badge>
                   <span className="text-xs text-black/60">
-                    fairgig.app/c/FG-2841
+                    fairgig.app/c/{workerId}
                   </span>
                 </div>
               </div>

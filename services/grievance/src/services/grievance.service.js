@@ -11,6 +11,7 @@ export async function createGrievance({ workerId, authorName, data }) {
       platform: data.platform,
       category: data.category,
       description: data.description,
+      tags: data.tags ?? [],
     },
   });
 }
@@ -70,4 +71,13 @@ export async function computeClusters() {
     select: { id: true, platform: true, category: true, description: true },
   });
   return buildClusters(all);
+}
+
+export async function incrementUpvote(id) {
+  const existing = await prisma.grievance.findUnique({ where: { id } });
+  if (!existing) throw notFound('Grievance not found');
+  return prisma.grievance.update({
+    where: { id },
+    data: { upvotes: { increment: 1 } },
+  });
 }

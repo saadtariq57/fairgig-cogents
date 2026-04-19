@@ -3,6 +3,7 @@
  * In a real build, the worker data, city medians, and grievances would come
  * from the Earnings / Analytics / Grievance services over REST.
  */
+import type { VerificationStatus } from "@/lib/api";
 
 export type Role = "worker" | "verifier" | "advocate";
 
@@ -42,7 +43,7 @@ export type ShiftLog = {
   deductions: number;
   net: number;
   zone: string;
-  verification: "verified" | "pending" | "flagged" | "unverifiable";
+  verification: VerificationStatus;
 };
 
 const today = new Date();
@@ -53,18 +54,18 @@ function daysAgo(n: number) {
 }
 
 export const mockShifts: ShiftLog[] = [
-  { id: "s1",  date: daysAgo(0),  platform: "Careem",    hours: 7.5, gross: 3200, deductions: 720, net: 2480, zone: "Lahore — Gulberg",   verification: "pending"  },
-  { id: "s2",  date: daysAgo(1),  platform: "Bykea",     hours: 6,   gross: 2100, deductions: 360, net: 1740, zone: "Lahore — Johar Town",verification: "verified" },
-  { id: "s3",  date: daysAgo(2),  platform: "Foodpanda", hours: 8,   gross: 3600, deductions: 980, net: 2620, zone: "Lahore — Gulberg",   verification: "verified" },
+  { id: "s1",  date: daysAgo(0),  platform: "Careem",    hours: 7.5, gross: 3200, deductions: 720, net: 2480, zone: "Lahore — Gulberg",   verification: "pending_review"  },
+  { id: "s2",  date: daysAgo(1),  platform: "Bykea",     hours: 6,   gross: 2100, deductions: 360, net: 1740, zone: "Lahore — Johar Town",verification: "confirmed" },
+  { id: "s3",  date: daysAgo(2),  platform: "Foodpanda", hours: 8,   gross: 3600, deductions: 980, net: 2620, zone: "Lahore — Gulberg",   verification: "confirmed" },
   { id: "s4",  date: daysAgo(3),  platform: "Careem",    hours: 9,   gross: 4100, deductions: 1180,net: 2920, zone: "Lahore — DHA",       verification: "flagged"  },
-  { id: "s5",  date: daysAgo(4),  platform: "Indrive",   hours: 5,   gross: 1800, deductions: 280, net: 1520, zone: "Lahore — Gulberg",   verification: "verified" },
-  { id: "s6",  date: daysAgo(5),  platform: "Bykea",     hours: 7,   gross: 2400, deductions: 410, net: 1990, zone: "Lahore — Johar Town",verification: "verified" },
-  { id: "s7",  date: daysAgo(6),  platform: "Foodpanda", hours: 8.5, gross: 3700, deductions: 1020,net: 2680, zone: "Lahore — Gulberg",   verification: "verified" },
-  { id: "s8",  date: daysAgo(8),  platform: "Careem",    hours: 8,   gross: 3500, deductions: 800, net: 2700, zone: "Lahore — DHA",       verification: "verified" },
-  { id: "s9",  date: daysAgo(10), platform: "Uber",      hours: 6,   gross: 2700, deductions: 690, net: 2010, zone: "Karachi — Clifton",  verification: "verified" },
-  { id: "s10", date: daysAgo(12), platform: "Bykea",     hours: 7.5, gross: 2600, deductions: 440, net: 2160, zone: "Lahore — Johar Town",verification: "verified" },
-  { id: "s11", date: daysAgo(15), platform: "Foodpanda", hours: 9,   gross: 4000, deductions: 1100,net: 2900, zone: "Lahore — Gulberg",   verification: "verified" },
-  { id: "s12", date: daysAgo(20), platform: "Careem",    hours: 7,   gross: 3100, deductions: 720, net: 2380, zone: "Lahore — DHA",       verification: "verified" },
+  { id: "s5",  date: daysAgo(4),  platform: "Indrive",   hours: 5,   gross: 1800, deductions: 280, net: 1520, zone: "Lahore — Gulberg",   verification: "confirmed" },
+  { id: "s6",  date: daysAgo(5),  platform: "Bykea",     hours: 7,   gross: 2400, deductions: 410, net: 1990, zone: "Lahore — Johar Town",verification: "confirmed" },
+  { id: "s7",  date: daysAgo(6),  platform: "Foodpanda", hours: 8.5, gross: 3700, deductions: 1020,net: 2680, zone: "Lahore — Gulberg",   verification: "confirmed" },
+  { id: "s8",  date: daysAgo(8),  platform: "Careem",    hours: 8,   gross: 3500, deductions: 800, net: 2700, zone: "Lahore — DHA",       verification: "confirmed" },
+  { id: "s9",  date: daysAgo(10), platform: "Uber",      hours: 6,   gross: 2700, deductions: 690, net: 2010, zone: "Karachi — Clifton",  verification: "confirmed" },
+  { id: "s10", date: daysAgo(12), platform: "Bykea",     hours: 7.5, gross: 2600, deductions: 440, net: 2160, zone: "Lahore — Johar Town",verification: "confirmed" },
+  { id: "s11", date: daysAgo(15), platform: "Foodpanda", hours: 9,   gross: 4000, deductions: 1100,net: 2900, zone: "Lahore — Gulberg",   verification: "confirmed" },
+  { id: "s12", date: daysAgo(20), platform: "Careem",    hours: 7,   gross: 3100, deductions: 720, net: 2380, zone: "Lahore — DHA",       verification: "confirmed" },
 ];
 
 export type WeeklyPoint = {

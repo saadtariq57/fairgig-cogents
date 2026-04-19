@@ -97,6 +97,14 @@ export function validateListFilters(query) {
   if (q.platform) filters.platform = String(q.platform).trim();
   if (q.worker_id) filters.workerId = String(q.worker_id);
 
+  const VALID_STATUSES = ['unverified', 'pending_review', 'confirmed', 'flagged', 'unverifiable'];
+  if (q.verification_status) {
+    if (!VALID_STATUSES.includes(q.verification_status)) {
+      throw badRequest(`verification_status must be one of: ${VALID_STATUSES.join(', ')}`);
+    }
+    filters.verificationStatus = q.verification_status;
+  }
+
   filters.page = Math.max(1, Number(q.page) || 1);
   filters.pageSize = Math.min(200, Math.max(1, Number(q.page_size) || 50));
 

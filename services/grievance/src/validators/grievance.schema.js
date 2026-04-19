@@ -36,7 +36,19 @@ export function validateGrievanceCreate(body) {
     anonymous = b.anonymous;
   }
 
-  return { platform, category, description, anonymous };
+  let tags = [];
+  if (b.tags !== undefined) {
+    if (!Array.isArray(b.tags)) throw badRequest('tags must be an array');
+    tags = b.tags.map((t, i) => {
+      if (typeof t !== 'string' || !t.trim()) {
+        throw badRequest(`tags[${i}] must be a non-empty string`);
+      }
+      return t.trim().toLowerCase();
+    });
+    tags = Array.from(new Set(tags));
+  }
+
+  return { platform, category, description, anonymous, tags };
 }
 
 export function validateAdvocatePatch(body) {

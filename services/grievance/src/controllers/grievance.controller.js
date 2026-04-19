@@ -5,6 +5,7 @@ import {
   updateGrievance,
   addComment,
   computeClusters,
+  incrementUpvote,
 } from '../services/grievance.service.js';
 import {
   validateGrievanceCreate,
@@ -85,5 +86,13 @@ export async function getClusters(_req, res, next) {
   try {
     const clusters = await computeClusters();
     res.json({ clusters });
+  } catch (err) { next(err); }
+}
+
+export async function upvoteGrievance(req, res, next) {
+  try {
+    const id = validateUuidParam('id', req.params.id);
+    const g = await incrementUpvote(id);
+    res.json({ id: g.id, upvotes: g.upvotes });
   } catch (err) { next(err); }
 }

@@ -14,6 +14,7 @@ enum GrievanceCategory {
   unpaid_earnings
   rate_drop
   other
+  community_post
 }
 
 enum GrievanceStatus {
@@ -33,6 +34,7 @@ model Grievance {
   status      GrievanceStatus   @default(open)
   tags        String[]          @default([])
   clusterId   String?           @map("cluster_id")
+  upvotes     Int               @default(0)
   postedAt    DateTime          @default(now()) @map("posted_at") @db.Timestamptz(6)
   updatedAt   DateTime          @updatedAt @map("updated_at") @db.Timestamptz(6)
 

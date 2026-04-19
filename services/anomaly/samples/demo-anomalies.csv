@@ -1,0 +1,19 @@
+platform,date,hours_worked,gross_earned,platform_deductions,net_received,notes
+Careem,2026-02-01,8,3200,576,2624,Normal shift
+Careem,2026-02-05,7.5,3000,540,2460,Normal shift
+Careem,2026-02-08,8,3100,558,2542,Normal shift
+Careem,2026-02-12,8,3400,612,2788,Normal shift
+Careem,2026-02-15,8,3300,594,2706,Normal shift
+Careem,2026-02-18,9,3600,648,2952,Normal shift
+InDrive,2026-02-20,7,2700,486,2214,Normal shift
+Careem,2026-02-22,8,3200,576,2624,Normal shift
+Careem,2026-02-25,7.5,2900,522,2378,Normal shift
+Foodpanda,2026-02-27,6,2400,432,1968,Normal shift
+Careem,2026-02-28,8,3200,576,2624,Normal shift
+Foodpanda,2026-03-02,5,2000,1020,980,Deduction spike — platform took 51% this shift
+Careem,2026-03-05,6,2200,396,1804,Income dropping
+Careem,2026-03-08,5,1800,324,1476,Income dropping
+InDrive,2026-03-10,5,1700,306,1394,Income dropping
+Careem,2026-03-12,4,1400,252,1148,Income dropping
+Careem,2026-03-15,5,1600,288,1312,Income dropping
+Foodpanda,2026-03-18,4,1400,252,1148,Income dropping

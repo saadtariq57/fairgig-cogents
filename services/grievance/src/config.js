@@ -16,6 +16,7 @@ export const GRIEVANCE_CATEGORIES = [
   'unpaid_earnings',
   'rate_drop',
   'other',
+  'community_post',
 ];
 
 export const GRIEVANCE_STATUSES = ['open', 'escalated', 'resolved'];

@@ -29,6 +29,7 @@ export async function listShifts(user, filters) {
   }
 
   if (filters.platform) where.platform = filters.platform;
+  if (filters.verificationStatus) where.verificationStatus = filters.verificationStatus;
   if (filters.from || filters.to) {
     where.shiftDate = {};
     if (filters.from) where.shiftDate.gte = filters.from;
