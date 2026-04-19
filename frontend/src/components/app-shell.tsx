@@ -10,7 +10,6 @@ import {
   ShieldCheck,
   FileText,
   Inbox,
-  BarChart3,
   MessagesSquare,
   Megaphone,
   Search,
@@ -41,12 +40,11 @@ type NavItem = {
 };
 
 const NAV: NavItem[] = [
-  { href: "/app",            label: "Overview",     icon: LayoutDashboard, roles: ["worker", "verifier", "advocate"] },
+  { href: "/app",            label: "Overview",     icon: LayoutDashboard, roles: ["worker"] },
   { href: "/app/earnings",   label: "Earnings",     icon: Receipt,         roles: ["worker"] },
   { href: "/app/verify",     label: "Verification", icon: ShieldCheck,     roles: ["worker"] },
   { href: "/app/certificate",label: "Certificate",  icon: FileText,        roles: ["worker"] },
   { href: "/app/queue",      label: "Review Queue", icon: Inbox,           roles: ["verifier"] },
-  { href: "/app/insights",   label: "Insights",     icon: BarChart3,       roles: ["advocate"] },
   { href: "/app/grievances", label: "Grievances",   icon: Megaphone,       roles: ["worker", "advocate"] },
   { href: "/app/community",  label: "Community",    icon: MessagesSquare,  roles: ["worker", "verifier", "advocate"] },
 ];

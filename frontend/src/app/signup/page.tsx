@@ -22,10 +22,16 @@ const ROLES = [
 ] as const;
 
 const CATEGORIES = [
-  { id: "ride_hailing", label: "Ride hailing" },
-  { id: "delivery",     label: "Delivery" },
-  { id: "freelance",    label: "Freelance" },
-  { id: "domestic",     label: "Domestic work" },
+  { id: "ride_hailing",  label: "Ride Hailing" },
+  { id: "delivery",      label: "Delivery" },
+  { id: "freelance",     label: "Freelance" },
+  { id: "domestic",      label: "Domestic Work" },
+  { id: "construction",  label: "Construction" },
+  { id: "retail",        label: "Retail / Shop Work" },
+  { id: "food_service",  label: "Food Service" },
+  { id: "tutoring",      label: "Tutoring / Education" },
+  { id: "beauty",        label: "Beauty & Salon" },
+  { id: "technical",     label: "Technical / Repair" },
 ] as const;
 
 type RoleId = (typeof ROLES)[number]["id"];
@@ -40,21 +46,32 @@ export default function SignupPage() {
   const [category, setCategory] = React.useState<string>(CATEGORIES[0].id);
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
+  const [passwordError, setPasswordError] = React.useState("");
+  const [formError, setFormError] = React.useState("");
   const [submitting, setSubmitting] = React.useState(false);
 
   React.useEffect(() => {
     if (status === "authenticated") router.replace("/app");
   }, [status, router]);
 
+  function validatePassword(value: string) {
+    if (value.length < 8) return "Password must be at least 8 characters.";
+    if (!/[A-Z]/.test(value)) return "Password must contain at least one uppercase letter.";
+    if (!/[^A-Za-z0-9]/.test(value)) return "Password must contain at least one special character.";
+    return "";
+  }
+
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (submitting) return;
 
-    if (password.length < 6) {
-      toast.error("Password must be at least 6 characters.");
+    const pwErr = validatePassword(password);
+    if (pwErr) {
+      setPasswordError(pwErr);
       return;
     }
 
+    setFormError("");
     const payload: RegisterInput = {
       email: email.trim(),
       password,
@@ -76,7 +93,7 @@ export default function SignupPage() {
         err instanceof ApiError
           ? err.message
           : "Could not create your account. Please try again.";
-      toast.error(message);
+      setFormError(message);
     } finally {
       setSubmitting(false);
     }
@@ -213,15 +230,28 @@ export default function SignupPage() {
                 id="pw"
                 type="password"
                 autoComplete="new-password"
-                minLength={6}
+                minLength={8}
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  if (passwordError) setPasswordError(validatePassword(e.target.value));
+                }}
                 required
+                aria-invalid={!!passwordError}
+                className={passwordError ? "border-destructive focus-visible:ring-destructive/50" : ""}
               />
-              <p className="text-xs text-muted-foreground">
-                At least 6 characters.
-              </p>
+              {passwordError ? (
+                <p className="text-xs text-destructive">{passwordError}</p>
+              ) : (
+                <p className="text-xs text-muted-foreground">
+                  At least 8 characters, one uppercase letter, and one special character.
+                </p>
+              )}
             </div>
+
+            {formError && (
+              <p className="text-sm text-destructive text-center">{formError}</p>
+            )}
 
             <Button
               type="submit"

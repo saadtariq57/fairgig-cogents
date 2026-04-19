@@ -1,26 +1,32 @@
 # FairGig
 
-A platform for gig workers to log, verify, and understand their earnings across platforms, and for labour advocates to spot systemic unfairness at scale.
+A platform for gig workers to log, verify, and understand their earnings across platforms — and for labour advocates to spot systemic unfairness at scale.
 
-## Structure
+## Architecture
 
-```
-.
-├── docs/                  # planning + API contracts
-├── frontend/              # Next.js 15 (App Router) + React 19 + Tailwind v4
-├── services/
-│   ├── auth/              # Node — JWT, roles (8001)
-│   ├── earnings/          # Node — shifts, CSV, verification (8002)
-│   ├── anomaly/           # Python FastAPI — detection (8003)
-│   ├── grievance/         # Node — complaints, clusters (8004)
-│   ├── analytics/         # Python FastAPI — aggregates (8005)
-│   └── certificate/       # Node — printable income cert (8006)
-└── postman/               # API collection
-```
+![Architecture](docs/architecture.png)
+
+## Services
+
+| Service | Tech | Port | Responsibility |
+|---|---|---|---|
+| **frontend** | Next.js 16 · React 19 · Tailwind v4 | 3000 | Worker & advocate UI |
+| **auth** | Node · Express · Prisma · JWT | 8001 | Identity, roles, tokens |
+| **earnings** | Node · Express · Prisma · Multer | 8002 | Shifts, CSV ingestion, verification |
+| **anomaly** | Python · FastAPI | 8003 | Statistical anomaly detection |
+| **grievance** | Node · Express · Prisma | 8004 | Complaints and cluster tracking |
+| **analytics** | Python · FastAPI · psycopg2 | 8005 | Aggregate income & commission stats |
+| **certificate** | Node · Express · EJS | 8006 | Printable income certificates |
+| **nginx** | nginx:alpine | 80 | Reverse proxy / edge router |
+
+All services run on a shared Docker network (`fairgig`) behind nginx. The three Node services (auth, earnings, grievance) and the certificate renderer share a **Neon** (hosted Postgres) database via Prisma. The two FastAPI services connect directly or via HTTP to peer services.
 
 ## Quickstart
 
-### Prereqs
+```bash
+# 1. Copy and fill env vars
+cp .env.example .env
 
-- Docker Desktop
-- A Neon project
+# 2. Start everything
+docker compose up --build
+```

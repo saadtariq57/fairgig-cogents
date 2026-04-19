@@ -16,7 +16,7 @@
  */
 
 export const AUTH_BASE_URL =
-  process.env.NEXT_PUBLIC_AUTH_URL || "http://localhost:8001";
+  process.env.NEXT_PUBLIC_AUTH_URL ?? "http://localhost:8001";
 
 const TOKENS_KEY = "fairgig.tokens";
 
@@ -175,7 +175,7 @@ export async function apiFetch<T = unknown>(
 /* ------------------------------------------------------------------ */
 
 export const EARNINGS_BASE_URL =
-  process.env.NEXT_PUBLIC_EARNINGS_URL || "http://localhost:8002";
+  process.env.NEXT_PUBLIC_EARNINGS_URL ?? "http://localhost:8002";
 
 /** Backend verification_status enum values */
 export type VerificationStatus =
@@ -404,7 +404,7 @@ export const workerApi = {
 /* ------------------------------------------------------------------ */
 
 export const GRIEVANCE_BASE_URL =
-  process.env.NEXT_PUBLIC_GRIEVANCE_URL || "http://localhost:8004";
+  process.env.NEXT_PUBLIC_GRIEVANCE_URL ?? "http://localhost:8004";
 
 export type GrievanceCategory =
   | "commission_change"
@@ -537,10 +537,10 @@ export const grievanceApi = {
 /* ------------------------------------------------------------------ */
 
 export const ANALYTICS_BASE_URL =
-  process.env.NEXT_PUBLIC_ANALYTICS_URL || "http://localhost:8005";
+  process.env.NEXT_PUBLIC_ANALYTICS_URL ?? "http://localhost:8005";
 
 export const ANOMALY_BASE_URL =
-  process.env.NEXT_PUBLIC_ANOMALY_URL || "http://localhost:8003";
+  process.env.NEXT_PUBLIC_ANOMALY_URL ?? "http://localhost:8003";
 
 export type MedianHourlyResponse = {
   category: string;

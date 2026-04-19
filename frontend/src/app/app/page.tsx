@@ -43,6 +43,7 @@ import {
   type WorkerSummaryResponse,
   type AnomalyFlag,
 } from "@/lib/api";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 
 /* ── severity badge colours ──────────────────────────────── */
@@ -84,6 +85,13 @@ function buildChartSeries(
 
 export default function OverviewPage() {
   const { user } = useAuth();
+  const router = useRouter();
+
+  React.useEffect(() => {
+    if (!user) return;
+    if (user.role === "verifier") router.replace("/app/queue");
+    if (user.role === "advocate") router.replace("/app/grievances");
+  }, [user, router]);
 
   /* ── state ── */
   const [recent, setRecent] = React.useState<Shift[]>([]);        // display: last 5

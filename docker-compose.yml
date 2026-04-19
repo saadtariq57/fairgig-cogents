@@ -1,14 +1,16 @@
 name: fairgig-cogents
 
+# Set PUBLIC_URL to your server's public address before deploying,
+# e.g.  PUBLIC_URL=http://your-server.com  docker compose up -d
+# Defaults to localhost for quick local testing via Nginx.
+
 services:
   auth:
     build: ./services/auth
     container_name: fairgig-auth
     env_file: ./services/auth/.env
     environment:
-      FRONTEND_ORIGIN: http://localhost:3000
-    ports:
-      - "8001:8001"
+      FRONTEND_ORIGIN: ${PUBLIC_URL:-http://localhost}
     restart: unless-stopped
     networks: [fairgig]
 
@@ -17,12 +19,10 @@ services:
     container_name: fairgig-earnings
     env_file: ./services/earnings/.env
     environment:
-      FRONTEND_ORIGIN: http://localhost:3000
+      FRONTEND_ORIGIN: ${PUBLIC_URL:-http://localhost}
       AUTH_SERVICE_URL: http://auth:8001
     volumes:
       - earnings-uploads:/app/uploads
-    ports:
-      - "8002:8002"
     depends_on: [auth]
     restart: unless-stopped
     networks: [fairgig]
@@ -32,9 +32,7 @@ services:
     container_name: fairgig-anomaly
     env_file: ./services/anomaly/.env
     environment:
-      FRONTEND_ORIGIN: http://localhost:3000
-    ports:
-      - "8003:8003"
+      FRONTEND_ORIGIN: ${PUBLIC_URL:-http://localhost}
     restart: unless-stopped
     networks: [fairgig]
 
@@ -43,10 +41,8 @@ services:
     container_name: fairgig-grievance
     env_file: ./services/grievance/.env
     environment:
-      FRONTEND_ORIGIN: http://localhost:3000
+      FRONTEND_ORIGIN: ${PUBLIC_URL:-http://localhost}
       AUTH_SERVICE_URL: http://auth:8001
-    ports:
-      - "8004:8004"
     depends_on: [auth]
     restart: unless-stopped
     networks: [fairgig]
@@ -56,10 +52,8 @@ services:
     container_name: fairgig-analytics
     env_file: ./services/analytics/.env
     environment:
-      FRONTEND_ORIGIN: http://localhost:3000
+      FRONTEND_ORIGIN: ${PUBLIC_URL:-http://localhost}
       GRIEVANCE_SERVICE_URL: http://grievance:8004
-    ports:
-      - "8005:8005"
     depends_on: [grievance]
     restart: unless-stopped
     networks: [fairgig]
@@ -69,11 +63,9 @@ services:
     container_name: fairgig-certificate
     env_file: ./services/certificate/.env
     environment:
-      FRONTEND_ORIGIN: http://localhost:3000
+      FRONTEND_ORIGIN: ${PUBLIC_URL:-http://localhost}
       EARNINGS_SERVICE_URL: http://earnings:8002
       AUTH_SERVICE_URL: http://auth:8001
-    ports:
-      - "8006:8006"
     depends_on: [earnings, auth]
     restart: unless-stopped
     networks: [fairgig]
@@ -82,16 +74,32 @@ services:
     build:
       context: ./frontend
       args:
-        NEXT_PUBLIC_AUTH_URL: http://localhost:8001
-        NEXT_PUBLIC_EARNINGS_URL: http://localhost:8002
-        NEXT_PUBLIC_ANOMALY_URL: http://localhost:8003
-        NEXT_PUBLIC_GRIEVANCE_URL: http://localhost:8004
-        NEXT_PUBLIC_ANALYTICS_URL: http://localhost:8005
-        NEXT_PUBLIC_CERTIFICATE_URL: http://localhost:8006
+        NEXT_PUBLIC_AUTH_URL: ""
+        NEXT_PUBLIC_EARNINGS_URL: ""
+        NEXT_PUBLIC_ANOMALY_URL: ""
+        NEXT_PUBLIC_GRIEVANCE_URL: ""
+        NEXT_PUBLIC_ANALYTICS_URL: ""
+        NEXT_PUBLIC_CERTIFICATE_URL: ""
     container_name: fairgig-frontend
-    ports:
-      - "3000:3000"
     depends_on:
+      - auth
+      - earnings
+      - anomaly
+      - grievance
+      - analytics
+      - certificate
+    restart: unless-stopped
+    networks: [fairgig]
+
+  nginx:
+    image: nginx:alpine
+    container_name: fairgig-nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - frontend
       - auth
       - earnings
       - anomaly

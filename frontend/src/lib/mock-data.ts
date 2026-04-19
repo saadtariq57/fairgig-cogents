@@ -25,13 +25,16 @@ export const PLATFORMS: Platform[] = [
 ];
 
 export const CITY_ZONES = [
-  "Lahore — Gulberg",
-  "Lahore — DHA",
-  "Lahore — Johar Town",
-  "Karachi — Clifton",
-  "Karachi — Gulshan",
-  "Islamabad — F-7",
-  "Rawalpindi — Saddar",
+  "Lahore",
+  "Karachi",
+  "Multan",
+  "Sahiwal",
+  "Faisalabad",
+  "Islamabad",
+  "Rawalpindi",
+  "Peshawar",
+  "Quetta",
+  "Sialkot",
 ];
 
 export type ShiftLog = {
