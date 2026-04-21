@@ -26,3 +26,17 @@ def health():
 )
 def detect(payload: DetectRequest, user: dict = Depends(require_auth)):
     return anomalies_controller.detect(payload, user)
+
+
+@router.post(
+    "/narrate",
+    summary="Detect anomalies and return an AI-generated, worker-friendly statement",
+    description=(
+        "Runs the same statistical detection as `/detect` and then asks Gemini "
+        "to turn the findings into a short, plain-English statement the worker "
+        "can act on. Falls back to a deterministic message if Gemini is "
+        "unavailable. Stateless — nothing is persisted."
+    ),
+)
+def narrate(payload: DetectRequest, user: dict = Depends(require_auth)):
+    return anomalies_controller.narrate(payload, user)

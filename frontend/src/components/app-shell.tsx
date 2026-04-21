@@ -15,6 +15,7 @@ import {
   LogOut,
   ChevronDown,
   Loader2,
+  Sparkles,
 } from "lucide-react";
 import { Logo } from "@/components/logo";
 import { cn } from "@/lib/utils";
@@ -41,6 +42,7 @@ const NAV: NavItem[] = [
   { href: "/app",            label: "Overview",     icon: LayoutDashboard, roles: ["worker"] },
   { href: "/app/earnings",   label: "Earnings",     icon: Receipt,         roles: ["worker"] },
   { href: "/app/verify",     label: "Verification", icon: ShieldCheck,     roles: ["worker"] },
+  { href: "/app/anomalies",  label: "Anomalies",    icon: Sparkles,        roles: ["worker"] },
   { href: "/app/certificate",label: "Certificate",  icon: FileText,        roles: ["worker"] },
   { href: "/app/queue",      label: "Review Queue", icon: Inbox,           roles: ["verifier"] },
   { href: "/app/grievances", label: "Grievances",   icon: Megaphone,       roles: ["worker", "advocate"] },

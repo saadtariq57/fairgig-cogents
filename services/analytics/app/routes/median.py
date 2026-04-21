@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, Response
 from typing import Optional
 
 from ..db import fetch_one
@@ -19,6 +19,7 @@ VALID_CATEGORIES = {"ride_hailing", "delivery", "freelance", "domestic"}
     summary="City-zone + category median hourly rate (k-anon enforced)",
 )
 def median_hourly(
+    response: Response,
     category: str = Query(..., description="ride_hailing | delivery | freelance | domestic"),
     city_zone: str = Query(..., description="e.g. Gulberg"),
     _user: dict = Depends(require_auth),
@@ -44,6 +45,10 @@ def median_hourly(
     """
     row = fetch_one(sql, (category, city_zone)) or {}
     sample_size = int(row.get("sample_size") or 0)
+
+    # City medians are anonymised aggregates that move slowly; cache them
+    # for a minute so repeated dashboard loads are instant.
+    response.headers["Cache-Control"] = "private, max-age=60"
 
     if not is_sufficient(sample_size):
         return {

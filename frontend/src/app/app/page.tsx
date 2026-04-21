@@ -117,30 +117,26 @@ export default function OverviewPage() {
       const from90 = ninetyDaysAgo.toISOString().slice(0, 10);
 
       try {
-        const [shiftsRes, allShiftsRes, profileRes, summaryRes] = await Promise.allSettled([
-          earningsApi.listShifts({ page_size: 5 }),
+        const [allShiftsRes, profileRes, summaryRes] = await Promise.allSettled([
           earningsApi.listShifts({ from: from90, page_size: 200 }),
           workerApi.getProfile(user!.id),
           analyticsApi.workerSummary(user!.id),
         ]);
 
-        if (shiftsRes.status === "fulfilled") setRecent(shiftsRes.value.items);
-        if (allShiftsRes.status === "fulfilled") setAllShifts(allShiftsRes.value.items);
+        if (allShiftsRes.status === "fulfilled") {
+          const items = allShiftsRes.value.items;
+          setAllShifts(items);
+          setRecent(items.slice(0, 5));
+        }
         if (profileRes.status === "fulfilled") setProfile(profileRes.value);
         if (summaryRes.status === "fulfilled") {
           const s = summaryRes.value;
           setSummary(s);
 
-          // Fetch city median hourly if we have zone + category
-          if (s.city_zone && s.category) {
-            try {
-              const median = await analyticsApi.medianHourly(s.category, s.city_zone);
-              if (median.median_hourly_rate !== null) {
-                setCityMedianHourly(median.median_hourly_rate);
-              }
-            } catch {
-              // Non-fatal
-            }
+          // City median already computed by the worker_summary endpoint —
+          // no second round-trip needed.
+          if (s.city_median?.median_hourly_rate != null) {
+            setCityMedianHourly(s.city_median.median_hourly_rate);
           }
         }
       } catch {

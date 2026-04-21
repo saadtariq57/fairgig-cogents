@@ -1,4 +1,6 @@
-from fastapi import APIRouter, Depends, Path
+import asyncio
+
+from fastapi import APIRouter, Depends, Path, Response
 
 from ..db import fetch_all, fetch_one
 from ..lib.auth import require_auth
@@ -22,7 +24,8 @@ def _get_user_row(worker_id: str):
     "/worker/{worker_id}/summary",
     summary="Per-worker summary: trends + city median for comparison",
 )
-def worker_summary(
+async def worker_summary(
+    response: Response,
     worker_id: str = Path(...),
     user: dict = Depends(require_auth),
 ):
@@ -38,13 +41,11 @@ def worker_summary(
     else:
         raise forbidden("Role not allowed for this endpoint")
 
-    target = _get_user_row(worker_id)
+    target = await asyncio.to_thread(_get_user_row, worker_id)
     if not target:
         raise not_found("Worker not found")
 
-    # weekly net + hours + effective hourly rate
-    weekly = fetch_all(
-        """
+    weekly_sql = """
         SELECT
           to_char(date_trunc('week', shift_date), 'IYYY-"W"IW') AS week,
           SUM(net_received) AS net,
@@ -56,13 +57,9 @@ def worker_summary(
         WHERE worker_id = %s
         GROUP BY date_trunc('week', shift_date)
         ORDER BY date_trunc('week', shift_date) ASC
-        """,
-        (worker_id,),
-    )
+    """
 
-    # monthly net trend
-    monthly = fetch_all(
-        """
+    monthly_sql = """
         SELECT
           to_char(date_trunc('month', shift_date), 'YYYY-MM') AS month,
           SUM(net_received) AS net,
@@ -71,13 +68,9 @@ def worker_summary(
         WHERE worker_id = %s
         GROUP BY date_trunc('month', shift_date)
         ORDER BY date_trunc('month', shift_date) ASC
-        """,
-        (worker_id,),
-    )
+    """
 
-    # platform commission % over time (monthly, per platform)
-    platform_series = fetch_all(
-        """
+    platform_sql = """
         SELECT
           to_char(date_trunc('month', shift_date), 'YYYY-MM') AS month,
           platform,
@@ -88,30 +81,45 @@ def worker_summary(
         WHERE worker_id = %s
         GROUP BY date_trunc('month', shift_date), platform
         ORDER BY date_trunc('month', shift_date) ASC, platform ASC
-        """,
-        (worker_id,),
-    )
+    """
 
-    # city median for the worker's bucket (reuse median-hourly logic inline;
-    # k-anon enforced here too)
+    median_sql = """
+        SELECT
+          percentile_cont(0.5) WITHIN GROUP (
+            ORDER BY (s.net_received / NULLIF(s.hours_worked, 0))
+          ) AS median_hourly_rate,
+          COUNT(DISTINCT s.worker_id) AS sample_size
+        FROM "earnings"."shifts" s
+        JOIN "auth"."users" u ON u.id = s.worker_id
+        WHERE u.category::text = %s
+          AND u.city_zone = %s
+          AND s.hours_worked > 0
+          AND s.verification_status::text IN ('confirmed', 'unverified')
+    """
+
+    # Fan out the 3 worker-scoped queries + city median query in parallel.
+    # Each fetch_* call opens its own short-lived psycopg2 connection,
+    # so they don't contend on shared state.
+    needs_median = bool(target["city_zone"] and target["category"])
+    tasks = [
+        asyncio.to_thread(fetch_all, weekly_sql, (worker_id,)),
+        asyncio.to_thread(fetch_all, monthly_sql, (worker_id,)),
+        asyncio.to_thread(fetch_all, platform_sql, (worker_id,)),
+    ]
+    if needs_median:
+        tasks.append(asyncio.to_thread(
+            fetch_one, median_sql, (target["category"], target["city_zone"])
+        ))
+
+    results = await asyncio.gather(*tasks)
+    weekly = results[0]
+    monthly = results[1]
+    platform_series = results[2]
+    median_row = results[3] if needs_median else None
+
     city_median_payload = None
-    if target["city_zone"] and target["category"]:
-        row = fetch_one(
-            """
-            SELECT
-              percentile_cont(0.5) WITHIN GROUP (
-                ORDER BY (s.net_received / NULLIF(s.hours_worked, 0))
-              ) AS median_hourly_rate,
-              COUNT(DISTINCT s.worker_id) AS sample_size
-            FROM "earnings"."shifts" s
-            JOIN "auth"."users" u ON u.id = s.worker_id
-            WHERE u.category::text = %s
-              AND u.city_zone = %s
-              AND s.hours_worked > 0
-              AND s.verification_status::text IN ('confirmed', 'unverified')
-            """,
-            (target["category"], target["city_zone"]),
-        ) or {}
+    if needs_median:
+        row = median_row or {}
         n = int(row.get("sample_size") or 0)
         if is_sufficient(n):
             median = row.get("median_hourly_rate")
@@ -156,6 +164,10 @@ def worker_summary(
             "platform": r["platform"],
             "avg_commission_pct": round(float(pct), 2) if pct is not None else None,
         }
+
+    # Aggregates only change as new shifts arrive; a short private cache lets
+    # the browser skip the round-trip on quick navigations / refreshes.
+    response.headers["Cache-Control"] = "private, max-age=60"
 
     return {
         "worker_id": worker_id,

@@ -699,9 +699,21 @@ export type DetectAnomaliesResponse = {
   method: Record<string, string>;
 };
 
+export type NarrateAnomaliesResponse = DetectAnomaliesResponse & {
+  statement: string;
+  ai_model: string | null;
+  ai_source: "ai" | "fallback";
+};
+
 export const anomalyApi = {
   detect: (input: DetectAnomaliesInput) =>
     apiFetch<DetectAnomaliesResponse>(ANOMALY_BASE_URL, "/anomalies/detect", {
+      method: "POST",
+      body: input,
+    }),
+
+  narrate: (input: DetectAnomaliesInput) =>
+    apiFetch<NarrateAnomaliesResponse>(ANOMALY_BASE_URL, "/anomalies/narrate", {
       method: "POST",
       body: input,
     }),
